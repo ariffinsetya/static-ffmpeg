@@ -1,0 +1,6 @@
+FROM alpine:3.15.0
+
+COPY --from=mwader/static-ffmpeg:5.0 /ffmpeg /usr/local/bin/
+COPY --from=mwader/static-ffmpeg:5.0 /ffprobe /usr/local/bin/
+
+CMD /bin/sh
