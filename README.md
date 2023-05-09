@@ -10,6 +10,7 @@ Built with the following statically-linked libraries:
 - fontconfig
 - gray
 - iconv
+- lcms2
 - libaom
 - libaribb24
 - libass
@@ -68,20 +69,20 @@ Use `mwader/static-ffmpeg` from Docker Hub or build image yourself.
 
 In Dockerfile
 ```Dockerfile
-COPY --from=mwader/static-ffmpeg:5.1.2 /ffmpeg /usr/local/bin/
-COPY --from=mwader/static-ffmpeg:5.1.2 /ffprobe /usr/local/bin/
+COPY --from=mwader/static-ffmpeg:6.0 /ffmpeg /usr/local/bin/
+COPY --from=mwader/static-ffmpeg:6.0 /ffprobe /usr/local/bin/
 ```
 
 Run directly
 ```sh
-docker run -i --rm -u $UID:$GROUPS -v "$PWD:$PWD" -w "$PWD" mwader/static-ffmpeg:5.1.2 -i file.wav file.mp3
-docker run -i --rm -u $UID:$GROUPS -v "$PWD:$PWD" -w "$PWD" --entrypoint=/ffprobe mwader/static-ffmpeg:5.1.2 -i file.wav
+docker run -i --rm -u $UID:$GROUPS -v "$PWD:$PWD" -w "$PWD" mwader/static-ffmpeg:6.0 -i file.wav file.mp3
+docker run -i --rm -u $UID:$GROUPS -v "$PWD:$PWD" -w "$PWD" --entrypoint=/ffprobe mwader/static-ffmpeg:6.0 -i file.wav
 ```
 
 As a shell/Bash alias
 ```sh
-alias ffmpeg='docker run -i --rm -u $UID:$GROUPS -v "$PWD:$PWD" -w "$PWD" mwader/static-ffmpeg:5.1.2'
-alias ffprobe='docker run -i --rm -u $UID:$GROUPS -v "$PWD:$PWD" -w "$PWD" --entrypoint=/ffprobe mwader/static-ffmpeg:5.1.2'
+alias ffmpeg='docker run -i --rm -u $UID:$GROUPS -v "$PWD:$PWD" -w "$PWD" mwader/static-ffmpeg:6.0'
+alias ffprobe='docker run -i --rm -u $UID:$GROUPS -v "$PWD:$PWD" -w "$PWD" --entrypoint=/ffprobe mwader/static-ffmpeg:6.0'
 ```
 
 ### Files in the image
@@ -106,6 +107,13 @@ as non-root even when used inside a container*, especially so if running on inpu
 you don't control.
 
 ### Known issues and tricks
+
+#### Copy out binaries from image
+
+This will copy `ffmpeg` and `ffprobe` to the current directory:
+```
+docker run --rm -v "$PWD:/out" $(echo -e 'FROM alpine\nCOPY --from=mwader/static-ffmpeg:latest /ff* /\nENTRYPOINT cp /ff* /out' | docker build -q -)
+```
 
 #### Quickly see what versions an image was build with
 
@@ -144,7 +152,6 @@ usage and potential distribution of such.
 ### TODOs and possible things to add
 
 - Add libplacebo, chromaprint, etc. ...
-- Add lcms2 support once in stable
 - Add libjxl support once in stable
 - Add xeve/xevd support once in stable
 - Add acceleration support (GPU, CUDA, ...)
