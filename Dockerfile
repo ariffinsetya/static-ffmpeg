@@ -1,6 +1,6 @@
 # bump: alpine /FROM alpine:([\d.]+)/ docker:alpine|^3
 # bump: alpine link "Release notes" https://alpinelinux.org/posts/Alpine-$LATEST-released.html
-FROM alpine:3.17.3 AS builder
+FROM alpine:3.18.0 AS builder
 
 RUN apk add --no-cache \
   coreutils \
@@ -35,7 +35,6 @@ RUN apk add --no-cache \
   fribidi-dev fribidi-static \
   brotli-dev brotli-static \
   soxr-dev soxr-static \
-  lcms2 lcms2-dev \
   tcl \
   numactl-dev \
   cunit cunit-dev \
@@ -85,9 +84,9 @@ RUN sed -i 's/-lvmaf /-lvmaf -lstdc++ /' /usr/local/lib/pkgconfig/libvmaf.pc
 # bump: aom after ./hashupdate Dockerfile AOM $LATEST
 # bump: aom after COMMIT=$(git ls-remote https://aomedia.googlesource.com/aom v$LATEST^{} | awk '{print $1}') && sed -i -E "s/^ARG AOM_COMMIT=.*/ARG AOM_COMMIT=$COMMIT/" Dockerfile
 # bump: aom link "CHANGELOG" https://aomedia.googlesource.com/aom/+/refs/tags/v$LATEST/CHANGELOG
-ARG AOM_VERSION=3.6.0
+ARG AOM_VERSION=3.6.1
 ARG AOM_URL="https://aomedia.googlesource.com/aom"
-ARG AOM_COMMIT=3c65175b1972da4a1992c1dae2365b48d13f9a8d
+ARG AOM_COMMIT=7ade96172b95adc91a5d85bf80c90989cd543ee8
 RUN \
   git clone --depth 1 --branch v$AOM_VERSION "$AOM_URL" && \
   cd aom && test $(git rev-parse HEAD) = $AOM_COMMIT && \
@@ -266,6 +265,20 @@ RUN \
   cd lame-* && ./configure --disable-shared --enable-static --enable-nasm --disable-gtktest --disable-cpml --disable-frontend && \
   make -j$(nproc) install
 
+# bump: lcms2 /LCMS2_VERSION=([\d.]+)/ https://github.com/mm2/Little-CMS.git|^2
+# bump: lcms2 after ./hashupdate Dockerfile LCMS2 $LATEST
+# bump: lcms2 link "Release" https://github.com/mm2/Little-CMS/releases/tag/lcms$LATEST
+ARG LCMS2_VERSION=2.15
+ARG LCMS2_URL="https://github.com/mm2/Little-CMS/releases/download/lcms$LCMS2_VERSION/lcms2-$LCMS2_VERSION.tar.gz"
+ARG LCMS2_SHA256=b20cbcbd0f503433be2a4e81462106fa61050a35074dc24a4e356792d971ab39
+RUN \
+  wget -O lcms2.tar.gz "$LCMS2_URL" && \
+  echo "$LCMS2_SHA256  lcms2.tar.gz" | sha256sum --status -c - && \
+  tar xfz lcms2.tar.gz && \
+  cd lcms2-* && \
+  ./autogen.sh && ./configure --enable-static --disable-shared && \
+  make -j$(nproc) install
+
 # bump: libmysofa /LIBMYSOFA_VERSION=([\d.]+)/ https://github.com/hoene/libmysofa.git|^1
 # bump: libmysofa after ./hashupdate Dockerfile LIBMYSOFA $LATEST
 # bump: libmysofa link "Release" https://github.com/hoene/libmysofa/releases/tag/v$LATEST
@@ -370,9 +383,9 @@ RUN \
 # bump: rav1e link "Release notes" https://github.com/xiph/rav1e/releases/tag/v$LATEST
 # RUSTFLAGS need to fix gcc_s
 # https://gitlab.alpinelinux.org/alpine/aports/-/issues/11806
-ARG RAV1E_VERSION=0.6.5
+ARG RAV1E_VERSION=0.6.6
 ARG RAV1E_URL="https://github.com/xiph/rav1e/archive/v$RAV1E_VERSION.tar.gz"
-ARG RAV1E_SHA256=a0d137aa40a27b308f965c4bc03a13493f6d07c888d6b52cc2ffaba36bfd5988
+ARG RAV1E_SHA256=723696e93acbe03666213fbc559044f3cae5b8b888b2ddae667402403cff51e5
 RUN \
   wget $WGET_OPTS -O rav1e.tar.gz "$RAV1E_URL" && \
   echo "$RAV1E_SHA256  rav1e.tar.gz" | sha256sum --status -c - && \
@@ -824,7 +837,6 @@ RUN \
   FRIBIDI_VERSION=$(pkg-config --modversion fribidi)  \
   LIBSAMPLERATE_VERSION=$(pkg-config --modversion samplerate) \
   LIBXML2_VERSION=$(pkg-config --modversion libxml-2.0) \
-  LCMS2_VERSION=$(pkg-config --modversion lcms2) \
   OPENSSL_VERSION=$(pkg-config --modversion openssl) \
   SOXR_VERSION=$(pkg-config --modversion soxr) \
   LIBVO_AMRWBENC_VERSION=$(pkg-config --modversion vo-amrwbenc) \
